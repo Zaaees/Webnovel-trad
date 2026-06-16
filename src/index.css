@@ -17,10 +17,29 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+  background: rgba(139, 92, 26, 0.2);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.4);
+  background: rgba(139, 92, 26, 0.4);
 }
+
+/* Custom reader container styles */
+.reader-parchment {
+  background-color: #fcf8f2;
+  color: #3e2f28;
+}
+.reader-sepia {
+  background-color: #f4edd8;
+  color: #4a3525;
+}
+.reader-paper {
+  background-color: #fbfbfc;
+  color: #1a1a1a;
+}
+.reader-darkwood {
+  background-color: #1d1916;
+  color: #ded1be;
+}
+
 

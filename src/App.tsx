@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { 
   Sparkles, BookOpen, Layers, RefreshCw, 
-  Check, AlertCircle, Bookmark, Compass
+  Check, AlertCircle, Bookmark, Compass, Moon, Sun, Feather, Hammer
 } from "lucide-react";
 import { WebnovelProject, GlossaryEntry, Chapter } from "./types";
 import ProjectManager from "./components/ProjectManager";
 import GlossaryPanel from "./components/GlossaryPanel";
 import ChapterWorkspace from "./components/ChapterWorkspace";
+import BookReader from "./components/BookReader";
 
 // PRESETS RESTORATION SEEDS
 const SEED_PROJECTS: WebnovelProject[] = [
@@ -38,7 +39,14 @@ const SEED_PROJECTS: WebnovelProject[] = [
 突然，窗外传来了一声低沉的乌鸦啼叫，仿佛预示着某种不可名状的存在。`,
         sourceLang: "CN",
         targetLang: "FR",
-        status: "pending",
+        status: "done",
+        translatedText: `Dans la nuit profonde, la lumière écarlate de la lune traversa la fine brume, se déversant doucement dans la pièce.
+Lin Fan ouvrit brusquement les yeux. Partout autour de lui, il aperçut un arrangement étrange de meubles européens classiques et anciens. Tenant son front qui battait d'une vive douleur sourde, son cœur se remplit de perplexité.
+« Où suis-je ? Comment me suis-je retrouvé ici ? » murmura doucement Lin Fan.
+En tant qu'artiste martial émérite, il tenta instinctivement de faire circuler son Qi Originel au sein de ses méridiens. Cependant, il s'aperçut avec stupéfaction que sa spiritualité divine résonnait et dérivait selon un axe cosmique tout à fait insolite.
+Sur la table de bureau en acajou de la pièce, trônaient un vieux carnet de cuir rouge usé ainsi qu'une lanterne en laiton diffusant une pâle mais chaleureuse clarté de gaz jaunâtre.
+Soudain, un croassement de corbeau, bas et lourd, résonna depuis le rebord de la fenêtre, comme s'il annonçait le réveil imminent d'une indicible entité éthérée.`,
+        validationNotes: "Terminologie vérifiée à 100% : Lin Fan, Qi Originel, spiritualité divine, lanterne en laiton sont tous traduits fidèlement.",
         createdAt: new Date().toISOString()
       },
       {
@@ -65,23 +73,27 @@ const SEED_PROJECTS: WebnovelProject[] = [
     createdAt: new Date().toISOString(),
     glossary: [
       { id: "cd1", original: "Linley Baruch", translation: "Linley Baruch", notes: "Protagoniste issu du clan des Guerriers au Sang de Dragon." },
-      { id: "cd2", original: "Ring of the Dragon", translation: "Anneau du Dragon", notes: "Artefact mythique de rang divin scellé dans l'argile." },
+      { id: "cd2", original: "Ring of the Dragon", translation: "Anneau du Dragon Enroulé", notes: "Artefact mythique de rang divin scellé dans l'argile." },
       { id: "cd3", original: "earth-style magic", translation: "magie tellurique", notes: "Sortilèges et affinités magiques liés à la terre profonde." },
       { id: "cd4", original: "beast", translation: "Créature Magique Sauvage", notes: "Créatures mystiques rôdant dans la chaîne de montagnes." },
-      { id: "cd5", original: "martial artist", translation: "Guerrier Champion martial", notes: "Classe de combat d'élite utilisant la force physique pure." }
+      { id: "cd5", original: "martial artist", translation: "Guerrier Champion", notes: "Classe de combat d'élite utilisant la force physique pure." }
     ],
     chapters: [
       {
         id: "cd-ch1",
         number: 1,
-        title: "The Coiling Dragon Ring",
+        title: "L'Anneau du Dragon Enroulé",
         originalText: `Linley Baruch stood on the grass, looking at the ancient castle of his clan. In his hands, he was holding a mysterious black ring shaped like an ancient coiling dragon.
 His heart beat quickly. He was a low-level martial artist, but he could feel a trace of earth-style magic leaking out of this ring.
 "Is this a divine beast's relic?" Linley muttered, a self-deprecating smile appearing on his face. "Even if it is, with my trash cultivation speed, what can I achieve?"
 All of a sudden, a shadow flashed across the sky. A high-level wolf beast howled in the distant misty mountains, creating a deep sense of danger.`,
         sourceLang: "EN",
         targetLang: "FR",
-        status: "pending",
+        status: "done",
+        translatedText: `Linley Baruch se tenait debout sur l'herbe tendre, contemplant le domaine féodal et le château décrépit de son clan. Entre ses doigts tremblants, il tenait un anneau sculpté de jais sombre, arborant la forme d'un dragon enroulé ancestral.
+Son cœur battait à tout rompre. Bien qu'il ne fût encore qu'un Guerrier Champion de humble rang, il percevait distinctement des effluves de magie tellurique s'échapper de ce minuscule bijou.
+« S'agirait-il du vestige d'une bête divine originelle ? » murmura Linley dans sa barbe, un sourire d'auto-dérision étirant ses lèvres. « Mais quand bien même ce serait le cas... Avec ma célérité d'entraînement misérable, à quoi puis-je espérer parvenir ? »
+Tout à coup, une ombre fugitive fendit la voûte céleste. Un hurlement sinistre de loup magique sauvage résonna depuis la haute brume des montagnes lointaines, instillant un profond frisson dans l'atmosphère.`,
         createdAt: new Date().toISOString()
       }
     ]
@@ -95,7 +107,91 @@ export default function App() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [healthStatus, setHealthStatus] = useState<{ checked: boolean; active: boolean }>({ checked: false, active: false });
 
-  // Load from server disk on mount
+  // Main high-level tabs: "traduction" or "lecture"
+  const [activeTab, setActiveTab] = useState<"traduction" | "lecture">("traduction");
+
+  // Night Mode core state
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem("night_mode_active") === "true";
+  });
+
+  // Read status tracking
+  const [readChapterIds, setReadChapterIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem("scriptorium_read_chapters");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleToggleRead = (chapterId: string) => {
+    setReadChapterIds(prev => {
+      const next = prev.includes(chapterId)
+        ? prev.filter(id => id !== chapterId)
+        : [...prev, chapterId];
+      localStorage.setItem("scriptorium_read_chapters", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Deep routing via URL Hash change & initialization
+  useEffect(() => {
+    if (projects.length === 0) return;
+
+    const parseHashAndApply = () => {
+      const hash = window.location.hash.substring(1);
+      if (!hash) return;
+
+      const params = new URLSearchParams(hash);
+      const tabParam = params.get("tab");
+      const projectParam = params.get("project");
+      const chapterParam = params.get("chapter");
+
+      if (tabParam === "traduction" || tabParam === "lecture") {
+        setActiveTab(tabParam);
+      }
+
+      if (projectParam) {
+        const foundProj = projects.find(p => p.id === projectParam);
+        if (foundProj) {
+          setSelectedProjectId(projectParam);
+          if (chapterParam) {
+            const foundCh = foundProj.chapters.find(c => c.id === chapterParam);
+            if (foundCh) {
+              setSelectedChapterId(chapterParam);
+            }
+          }
+        }
+      }
+    };
+
+    // Run once on load/active projects populate
+    parseHashAndApply();
+
+    // Listen to hash changes
+    window.addEventListener("hashchange", parseHashAndApply);
+    return () => window.removeEventListener("hashchange", parseHashAndApply);
+  }, [projects]);
+
+  // Synchronize state back onto URL hash seamlessly
+  useEffect(() => {
+    if (projects.length === 0) return;
+
+    const hashParams = new URLSearchParams();
+    hashParams.set("tab", activeTab);
+    hashParams.set("project", selectedProjectId);
+    if (selectedChapterId) {
+      hashParams.set("chapter", selectedChapterId);
+    }
+
+    const nextHash = `#${hashParams.toString()}`;
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState(null, "", nextHash);
+    }
+  }, [activeTab, selectedProjectId, selectedChapterId, projects]);
+
+  // Load projects from server disk on mount
   useEffect(() => {
     fetch("/api/projects")
       .then(r => r.json())
@@ -117,29 +213,13 @@ export default function App() {
         }
       })
       .catch((e) => {
-        console.warn("Failed fetching projects from API, trying static copy:", e);
-        fetch("./data/projects.json")
-          .then(r => r.json())
-          .then(data => {
-            if (data && data.length > 0) {
-              setProjects(data);
-              setSelectedProjectId(data[0].id);
-              const activeProj = data[0];
-              if (activeProj && activeProj.chapters && activeProj.chapters.length > 0) {
-                setSelectedChapterId(activeProj.chapters[0].id);
-              }
-            } else {
-              throw new Error("Empty data");
-            }
-          })
-          .catch((err) => {
-            console.error("Failed fetching static projects.json:", err);
-            setProjects(SEED_PROJECTS);
-            setSelectedProjectId(SEED_PROJECTS[0].id);
-            if (SEED_PROJECTS[0].chapters.length > 0) {
-              setSelectedChapterId(SEED_PROJECTS[0].chapters[0].id);
-            }
-          });
+        console.error("Failed fetching projects from disk:", e);
+        // Fall back to seed projects in local-state memory
+        setProjects(SEED_PROJECTS);
+        setSelectedProjectId(SEED_PROJECTS[0].id);
+        if (SEED_PROJECTS[0].chapters.length > 0) {
+          setSelectedChapterId(SEED_PROJECTS[0].chapters[0].id);
+        }
       });
 
     // Verify Backend connection
@@ -171,6 +251,14 @@ export default function App() {
     })
     .catch(err => {
       console.error("Failed writing projects file:", err);
+    });
+  };
+
+  const handleToggleDarkMode = () => {
+    setIsDarkMode(prev => {
+      const next = !prev;
+      localStorage.setItem("night_mode_active", next ? "true" : "false");
+      return next;
     });
   };
 
@@ -363,7 +451,7 @@ export default function App() {
         throw new Error(data.error || "Erreur lors de la traduction.");
       }
 
-      // Merge results and merge any auto-generated glossary rules on the fly using functional state!
+      // Merge results and sync glossary on the fly
       setProjects(prevProjects => {
         const finalProjects = prevProjects.map(p => {
           if (p.id === selectedProjectId) {
@@ -451,105 +539,187 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 text-slate-800 flex flex-col font-sans selection:bg-indigo-500/20">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
+      isDarkMode 
+        ? "dark bg-[#171412] text-stone-200 selection:bg-amber-800/40" 
+        : "bg-[#fcfaf7] text-stone-900 selection:bg-amber-100"
+    }`}>
       
-      {/* BEAUTIFUL ELEMEENTARY LITERARY HEADER */}
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-40 px-6 py-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* RICH BROWN HARVEST LITERARY HEADER */}
+      <header className="border-b border-amber-900/10 dark:border-stone-800 bg-white/95 dark:bg-[#201915]/95 backdrop-blur-md sticky top-0 z-40 px-6 py-4 shadow-sm transition-colors">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
           
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-md shadow-indigo-100">
-              <BookOpen className="w-5 h-5" />
+          <div className="flex items-center gap-3.5">
+            <div className="p-3 bg-amber-700 dark:bg-amber-800 text-white rounded-2xl shadow-md">
+              <Feather className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-sans font-extrabold text-base text-slate-900 tracking-tight">
-                  Lecteur & Traducteur Littéraire IA
+                <h1 className="font-serif font-extrabold text-base tracking-tight text-amber-950 dark:text-stone-100">
+                  Scriptorium — Traducteur & Lecteur de Webnovel
                 </h1>
-                <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase">
-                  Polissage Anti-Hallucination
+                <span className="bg-amber-700/10 text-amber-800 dark:text-amber-400 border border-amber-600/20 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase font-sans">
+                  Pipeline Littéraire en 3 Étapes
                 </span>
               </div>
-              <p className="text-xs text-slate-500">
-                Lisez vos romans en plein écran, appliquez un glossaire et enrichissez automatiquement le lore.
+              <p className="text-xs text-stone-550 dark:text-stone-400 font-sans">
+                Alignement terminologique strict avec détection et enrichissement de Lore par IA.
               </p>
             </div>
           </div>
 
-          {/* Secure API Key indicator */}
-          <div className="flex items-center gap-3">
-            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2 px-3 flex items-center gap-2.5">
-              <div className={`w-2 h-2 rounded-full ${healthStatus.active ? "bg-emerald-500" : "bg-indigo-600 animate-pulse"}`} />
+          <div className="flex items-center gap-4 self-end md:self-auto flex-wrap">
+            
+            {/* Dark mode button */}
+            <button
+              onClick={handleToggleDarkMode}
+              className="p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-[#1d1916] hover:bg-stone-100 dark:hover:bg-[#251e1a] text-stone-605 dark:text-stone-300 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+              title={isDarkMode ? "Passer en mode clair" : "Passer en mode nuit sombre"}
+              id="btn-toggle-dark-mode"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-stone-600" />}
+            </button>
+
+            {/* Secure API Key indicator */}
+            <div className="bg-stone-50/50 dark:bg-[#1d1916] border border-stone-200/80 dark:border-stone-800 rounded-xl p-2 px-3.5 flex items-center gap-2.5 shadow-sm text-xs select-none">
+              <div className={`w-2.5 h-2.5 rounded-full ${healthStatus.active ? "bg-emerald-500 animate-pulse" : "bg-amber-700"}`} />
               <div className="flex flex-col text-[11px] leading-tight">
-                <span className="text-slate-400 font-sans font-semibold uppercase tracking-wider text-[9px]">MOTEUR DE SYNTHÈSE</span>
-                <span className="font-bold text-slate-700 font-sans">
-                  {healthStatus.active ? "Gemini Connecté" : "Discutez à droite pour traduire"}
+                <span className="text-stone-400 font-sans font-bold uppercase tracking-wider text-[8px]">SYNTHÈSE IA</span>
+                <span className="font-bold text-stone-700 dark:text-stone-305 font-sans">
+                  {healthStatus.active ? "Gemini Direct" : "Discutez à droite pour traduire"}
                 </span>
               </div>
             </div>
+
           </div>
 
         </div>
       </header>
 
-      {/* CORE FRAMEWORK CONTAINER */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        
-        {/* ROW 1: Project Manager selection */}
-        <ProjectManager
-          projects={projects}
-          selectedProjectId={selectedProjectId}
-          onSelectProject={(id) => {
-            setSelectedProjectId(id);
-            const proj = projects.find(p => p.id === id);
-            if (proj && proj.chapters.length > 0) {
-              setSelectedChapterId(proj.chapters[0].id);
-            } else {
-              setSelectedChapterId(null);
-            }
-          }}
-          onCreateProject={handleCreateProject}
-          onDeleteProject={handleDeleteProject}
-        />
-
-        {/* ROW 2: SPLIT COHESION AND CONTENT */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
+      {/* DUAL MODE SECTION TAB BAR (TRADUCTION vs LECTURE) */}
+      <div className="border-b border-amber-900/5 dark:border-stone-850 bg-amber-500/5 dark:bg-[#1d1916]/50 py-3 px-6 transition-colors">
+        <div className="max-w-7xl mx-auto flex items-center gap-2">
           
-          {/* Chapter view & Side by side translations */}
-          <div className="xl:col-span-8">
-            <ChapterWorkspace
-              chapters={activeProject?.chapters || []}
-              selectedChapterId={selectedChapterId}
-              onSelectChapter={setSelectedChapterId}
-              onAddChapter={handleAddChapter}
-              onTranslateChapter={handleTranslateChapter}
-              onUpdateTranslatedText={handleUpdateChapterTranslatedText}
-              onDeleteChapter={handleDeleteChapter}
-              isTranslating={isTranslating}
-              hasApiKey={healthStatus.active}
-            />
-          </div>
+          <button
+            onClick={() => setActiveTab("traduction")}
+            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === "traduction"
+                ? "bg-amber-800 text-white shadow-sm scale-[1.02]"
+                : "text-stone-500 hover:text-amber-800 dark:text-stone-400 dark:hover:text-amber-400 bg-transparent hover:bg-black/5 dark:hover:bg-white/5"
+            }`}
+            id="tab-traduction"
+          >
+            <Hammer className="w-4 h-4" />
+            <span>Onglet : Traduction & Lore</span>
+          </button>
 
-          {/* Glossary panel list */}
-          <div className="xl:col-span-4 h-full">
-            <GlossaryPanel
-              glossary={activeProject?.glossary || []}
-              onAddEntry={handleAddGlossaryEntry}
-              onDeleteEntry={handleDeleteGlossaryEntry}
-              onImportBulk={handleImportBulkGlossary}
-              sourceLang={activeProject?.sourceLang || "CN"}
-            />
-          </div>
+          <button
+            onClick={() => {
+              setActiveTab("lecture");
+            }}
+            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === "lecture"
+                ? "bg-amber-800 text-white shadow-sm scale-[1.02]"
+                : "text-stone-500 hover:text-amber-800 dark:text-stone-400 dark:hover:text-amber-400 bg-transparent hover:bg-black/5 dark:hover:bg-white/5"
+            }`}
+            id="tab-lecture"
+          >
+            <BookOpen className="w-4 h-4" />
+            <span>Onglet : Lecture Distraction-Free</span>
+          </button>
 
         </div>
+      </div>
+
+      {/* CORE FRAMEWORK CONTAINER */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6 min-h-0">
+        
+        {activeTab === "traduction" ? (
+          /* TRADUCTION SECTION: FULL POWER WORKBENCH */
+          <div className="space-y-6 animate-fadeIn">
+            
+            {/* ROW 1: Library Selector & novel imports */}
+            <ProjectManager
+              projects={projects}
+              selectedProjectId={selectedProjectId}
+              onSelectProject={(id) => {
+                setSelectedProjectId(id);
+                const proj = projects.find(p => p.id === id);
+                if (proj && proj.chapters.length > 0) {
+                  setSelectedChapterId(proj.chapters[0].id);
+                } else {
+                  setSelectedChapterId(null);
+                }
+              }}
+              onCreateProject={handleCreateProject}
+              onDeleteProject={handleDeleteProject}
+            />
+
+            {/* ROW 2: SPLIT PANEL EXECUTIONS */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch min-h-0">
+              
+              {/* Left-center chapter list & live synchronizer */}
+              <div className="xl:col-span-8 flex flex-col min-h-0">
+                <ChapterWorkspace
+                  chapters={activeProject?.chapters || []}
+                  selectedChapterId={selectedChapterId}
+                  onSelectChapter={setSelectedChapterId}
+                  onAddChapter={handleAddChapter}
+                  onTranslateChapter={handleTranslateChapter}
+                  onUpdateTranslatedText={handleUpdateChapterTranslatedText}
+                  onDeleteChapter={handleDeleteChapter}
+                  isTranslating={isTranslating}
+                  hasApiKey={healthStatus.active}
+                  readChapterIds={readChapterIds}
+                />
+              </div>
+
+              {/* Right Glossary coherence panel */}
+              <div className="xl:col-span-4 flex flex-col min-h-0 h-full">
+                <GlossaryPanel
+                  glossary={activeProject?.glossary || []}
+                  onAddEntry={handleAddGlossaryEntry}
+                  onDeleteEntry={handleDeleteGlossaryEntry}
+                  onImportBulk={handleImportBulkGlossary}
+                  sourceLang={activeProject?.sourceLang || "CN"}
+                />
+              </div>
+
+            </div>
+
+          </div>
+        ) : (
+          /* LECTURE SECTION: Dedicated physical book simulation */
+          <div className="animate-fadeIn">
+            <BookReader
+              projects={projects}
+              selectedProjectId={selectedProjectId}
+              onSelectProject={(id) => {
+                setSelectedProjectId(id);
+                const proj = projects.find(p => p.id === id);
+                if (proj && proj.chapters.length > 0) {
+                  setSelectedChapterId(proj.chapters[0].id);
+                } else {
+                  setSelectedChapterId(null);
+                }
+              }}
+              activeChapterId={selectedChapterId}
+              setActiveChapterId={setSelectedChapterId}
+              isDarkMode={isDarkMode}
+              onToggleDarkMode={handleToggleDarkMode}
+              readChapterIds={readChapterIds}
+              onToggleRead={handleToggleRead}
+            />
+          </div>
+        )}
 
       </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-slate-200 bg-white py-6 px-6 text-center text-[11px] text-slate-400 leading-normal">
+      <footer className="border-t border-amber-900/10 dark:border-stone-850 bg-white/40 dark:bg-[#1d1916]/20 py-6 px-6 text-center text-[11px] text-stone-450 dark:text-stone-500 leading-normal font-sans">
         <div>
-          Lecteur & Traducteur de Webnovel d’Antigravity IDE — Consistance terminologique assistée par IA.<br />
-          Zéro distractions de terminal, focus absolu sur la fluidité et le plaisir de lecture littéraire.
+          Scriptorium Littéraire d’Antigravity IDE — Consistance terminologique assistée par IA.<br />
+          Zéro distractions de diagnostic, focus absolu sur la fluidité et le plaisir de lecture.
         </div>
       </footer>
 
