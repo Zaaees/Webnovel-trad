@@ -4,6 +4,7 @@ import { execSync } from 'child_process';
 
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const PROJECTS_FILE = path.join(process.cwd(), 'data', 'projects.json');
+const PUBLIC_PROJECTS_FILE = path.join(process.cwd(), 'public', 'data', 'projects.json');
 
 // Decode special HTML characters
 function decodeHtml(html) {
@@ -143,6 +144,9 @@ async function run() {
       nanoProject.chapters.sort((a, b) => a.number - b.number);
       // Write back to projects.json incrementally
       fs.writeFileSync(PROJECTS_FILE, JSON.stringify(projects, null, 2), 'utf-8');
+      try {
+        fs.writeFileSync(PUBLIC_PROJECTS_FILE, JSON.stringify(projects, null, 2), 'utf-8');
+      } catch (e) {}
       
       console.log(`[Chapitre ${chap}] Ajouté et sauvegardé avec succès : ${title}`);
       successCount++;
@@ -159,6 +163,9 @@ async function run() {
     nanoProject.chapters.sort((a, b) => a.number - b.number);
     // Write back to projects.json
     fs.writeFileSync(PROJECTS_FILE, JSON.stringify(projects, null, 2), 'utf-8');
+    try {
+      fs.writeFileSync(PUBLIC_PROJECTS_FILE, JSON.stringify(projects, null, 2), 'utf-8');
+    } catch (e) {}
     console.log(`\nSauvegarde effectuée ! ${successCount} nouveaux chapitres ajoutés.`);
   } else {
     console.log("\nAucun nouveau chapitre n'a été ajouté.");

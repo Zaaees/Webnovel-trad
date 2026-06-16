@@ -15,6 +15,7 @@ app.use(express.json({ limit: "25mb" }));
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const PROJECTS_FILE = path.join(DATA_DIR, "projects.json");
+const PUBLIC_PROJECTS_FILE = path.join(process.cwd(), "public", "data", "projects.json");
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -119,6 +120,15 @@ function loadProjects() {
 // Save project list to disk
 function saveProjects(data: any) {
   fs.writeFileSync(PROJECTS_FILE, JSON.stringify(data, null, 2), "utf-8");
+  try {
+    const publicDataDir = path.dirname(PUBLIC_PROJECTS_FILE);
+    if (!fs.existsSync(publicDataDir)) {
+      fs.mkdirSync(publicDataDir, { recursive: true });
+    }
+    fs.writeFileSync(PUBLIC_PROJECTS_FILE, JSON.stringify(data, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Error syncing to public projects.json:", e);
+  }
 }
 
 // REST endpoints for data persistence

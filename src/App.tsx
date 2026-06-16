@@ -194,7 +194,17 @@ export default function App() {
   // Load projects from server disk on mount
   useEffect(() => {
     fetch("/api/projects")
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error("API not available");
+        return r.json();
+      })
+      .catch((e) => {
+        console.warn("API unavailable, falling back to static projects.json:", e);
+        return fetch("data/projects.json").then(r => {
+          if (!r.ok) throw new Error("Static projects.json not found");
+          return r.json();
+        });
+      })
       .then(data => {
         if (data && data.length > 0) {
           setProjects(data);
@@ -213,7 +223,7 @@ export default function App() {
         }
       })
       .catch((e) => {
-        console.error("Failed fetching projects from disk:", e);
+        console.error("Failed fetching projects from both API and static fallback:", e);
         // Fall back to seed projects in local-state memory
         setProjects(SEED_PROJECTS);
         setSelectedProjectId(SEED_PROJECTS[0].id);
