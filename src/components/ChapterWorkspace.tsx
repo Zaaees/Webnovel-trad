@@ -51,6 +51,9 @@ export default function ChapterWorkspace({
   const [batchTranslationProgress, setBatchTranslationProgress] = useState<string>("");
   const [isBatchCommandCopied, setIsBatchCommandCopied] = useState(false);
 
+  // Visibility filters
+  const [hideTranslated, setHideTranslated] = useState(false);
+
   const handleSelectAll = () => {
     setSelectedBatchIds(chapters.map(c => c.id));
   };
@@ -61,6 +64,12 @@ export default function ChapterWorkspace({
 
   const handleSelectPending = () => {
     setSelectedBatchIds(chapters.filter(c => c.status !== "done").map(c => c.id));
+  };
+
+  const handleSelectNextTenPending = () => {
+    const untranslated = chapters.filter(c => c.status !== "done");
+    const nextTen = untranslated.slice(0, 10).map(c => c.id);
+    setSelectedBatchIds(nextTen);
   };
 
   const handleToggleBatchId = (id: string) => {
@@ -94,6 +103,16 @@ export default function ChapterWorkspace({
   };
 
   const selectedChapter = chapters.find(c => c.id === selectedChapterId);
+
+  // Reader sequential navigation of translated chapters
+  const translatedChapters = chapters.filter(c => c.status === "done" && c.translatedText);
+  const currentTranslatedIndex = translatedChapters.findIndex(c => c.id === selectedChapterId);
+  const prevChapter = currentTranslatedIndex > 0 ? translatedChapters[currentTranslatedIndex - 1] : null;
+  const nextChapter = currentTranslatedIndex >= 0 && currentTranslatedIndex < translatedChapters.length - 1 ? translatedChapters[currentTranslatedIndex + 1] : null;
+
+  const filteredChapters = hideTranslated 
+    ? chapters.filter(c => c.status !== "done")
+    : chapters;
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,13 +196,15 @@ export default function ChapterWorkspace({
 
         {/* Batch selection helper bar */}
         {chapters.length > 0 && (
-          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col gap-1.5 text-[11px] text-slate-500">
+          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col gap-2 text-[11px] text-slate-500">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-slate-750">{selectedBatchIds.length} sélectionné(s)</span>
-              <div className="flex items-center gap-2 font-semibold">
+              <div className="flex items-center gap-1.5 flex-wrap justify-end font-semibold">
                 <button type="button" onClick={handleSelectAll} className="hover:text-indigo-650 text-indigo-600 transition">Tous</button>
                 <span className="text-slate-300">|</span>
                 <button type="button" onClick={handleSelectPending} className="hover:text-indigo-650 text-indigo-600 transition">Non-traduits</button>
+                <span className="text-slate-300">|</span>
+                <button type="button" onClick={handleSelectNextTenPending} className="hover:text-indigo-650 text-indigo-600 transition" title="Sélectionner les 10 prochains chapitres non traduits">+10 non-traduits</button>
                 <span className="text-slate-300">|</span>
                 <button type="button" onClick={handleSelectNone} className="hover:text-rose-600 text-slate-450 transition">Vider</button>
               </div>
@@ -191,14 +212,29 @@ export default function ChapterWorkspace({
           </div>
         )}
 
+        {/* Visibility filters */}
+        {chapters.length > 0 && (
+          <div className="flex items-center justify-between bg-slate-50/50 px-2.5 py-1.5 rounded-xl border border-slate-200">
+            <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer select-none w-full">
+              <input
+                type="checkbox"
+                checked={hideTranslated}
+                onChange={(e) => setHideTranslated(e.target.checked)}
+                className="w-3.5 h-3.5 accent-indigo-600 border-slate-300 rounded cursor-pointer"
+              />
+              <span>Masquer les traduits</span>
+            </label>
+          </div>
+        )}
+
         {/* Chapters Scrollable Area */}
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-          {chapters.length === 0 ? (
+          {filteredChapters.length === 0 ? (
             <div className="text-center text-xs text-slate-400 py-10">
-              Aucun chapitre importé.
+              {chapters.length === 0 ? "Aucun chapitre importé." : "Aucun chapitre (certains sont masqués)."}
             </div>
           ) : (
-            chapters.map((ch) => {
+            filteredChapters.map((ch) => {
               const works = ch.id === selectedChapterId;
               const isChecked = selectedBatchIds.includes(ch.id);
               return (
@@ -602,10 +638,38 @@ export default function ChapterWorkspace({
             readerTheme === "dark" ? "border-slate-800 bg-[#18181a]/95" : "border-slate-200/60 bg-[#faf6eb]/95"
           } backdrop-blur-sm shadow-sm flex-shrink-0`}>
             
-            <div className="flex items-center gap-2">
-              <span className="font-sans text-[10px] font-bold uppercase tracking-widest opacity-60">Chapitre {selectedChapter.number}</span>
-              <span className="opacity-40 font-sans">•</span>
-              <h2 className="font-bold text-xs md:text-sm truncate max-w-[200px] md:max-w-sm font-sans">{selectedChapter.title}</h2>
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5 opacity-60 font-sans text-[10px] font-bold tracking-widest uppercase">
+                  <span>Chapitre {selectedChapter.number}</span>
+                  <span>•</span>
+                  <span>Roman</span>
+                </div>
+                <h2 className="font-bold text-xs md:text-sm truncate max-w-[150px] md:max-w-sm font-sans">{selectedChapter.title}</h2>
+              </div>
+              
+              {/* Pagination controls */}
+              <div className="flex items-center gap-1 bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-black/10 dark:border-white/10 ml-2 font-sans text-xs">
+                <button
+                  type="button"
+                  disabled={!prevChapter}
+                  onClick={() => prevChapter && onSelectChapter(prevChapter.id)}
+                  className="px-2.5 py-1 hover:bg-black/10 dark:hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg font-bold transition flex items-center gap-1"
+                  title="Chapitre précédent"
+                >
+                  ← Préc.
+                </button>
+                <span className="text-black/10 dark:text-white/10 px-0.5">|</span>
+                <button
+                  type="button"
+                  disabled={!nextChapter}
+                  onClick={() => nextChapter && onSelectChapter(nextChapter.id)}
+                  className="px-2.5 py-1 hover:bg-black/10 dark:hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent rounded-lg font-bold transition flex items-center gap-1"
+                  title="Chapitre suivant"
+                >
+                  Suiv. →
+                </button>
+              </div>
             </div>
 
             {/* HUD Buttons */}
@@ -691,9 +755,36 @@ export default function ChapterWorkspace({
               {/* Main Reading Paragraphs Body */}
               <div 
                 style={{ fontSize: `${readerFontSize}px`, lineHeight: "1.85" }} 
-                className="whitespace-pre-line text-justify select-text focus:outline-none flex-1 pb-24 font-serif selection:bg-indigo-300/30"
+                className="whitespace-pre-line text-justify select-text focus:outline-none flex-1 pb-12 font-serif selection:bg-indigo-300/30"
               >
                 {selectedChapter.translatedText}
+              </div>
+
+              {/* Bottom chapter navigation */}
+              <div className="flex items-center justify-between border-t border-black/5 dark:border-white/5 pt-8 pb-24 font-sans">
+                {prevChapter ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelectChapter(prevChapter.id)}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 rounded-xl transition font-semibold text-xs active:scale-95 text-slate-705"
+                  >
+                    <span>← Chapitre {prevChapter.number}</span>
+                  </button>
+                ) : (
+                  <div />
+                )}
+                
+                {nextChapter ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelectChapter(nextChapter.id)}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-505 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition font-bold text-xs shadow-sm active:scale-95"
+                  >
+                    <span>Chapitre {nextChapter.number} →</span>
+                  </button>
+                ) : (
+                  <div />
+                )}
               </div>
             </div>
           </div>
