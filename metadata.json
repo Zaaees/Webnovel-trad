@@ -1,0 +1,6 @@
+{
+  "name": "Traducteur de Webnovels IA",
+  "description": "Application de traduction automatisée de chapitres de Webnovels (chinois/anglais vers français) avec glossaire personnalisé et validation multi-prompts anti-hallucination.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
