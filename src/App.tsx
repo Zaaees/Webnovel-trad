@@ -191,6 +191,34 @@ export default function App() {
     }
   }, [activeTab, selectedProjectId, selectedChapterId, projects]);
 
+  // Update browser tab/window title for cleaner bookmarking
+  useEffect(() => {
+    if (projects.length === 0) {
+      document.title = "Scriptorium — Traducteur & Lecteur de Webnovel";
+      return;
+    }
+
+    const activeProject = projects.find(p => p.id === selectedProjectId);
+    if (!activeProject) {
+      document.title = "Scriptorium — Traducteur & Lecteur de Webnovel";
+      return;
+    }
+
+    const activeChapter = activeProject.chapters.find(c => c.id === selectedChapterId);
+
+    if (activeTab === "lecture" && activeChapter) {
+      document.title = `${activeProject.name} - Chapitre ${activeChapter.number} : ${activeChapter.title}`;
+    } else if (activeTab === "traduction" && activeProject) {
+      if (activeChapter) {
+        document.title = `${activeProject.name} - Traduction Ch. ${activeChapter.number} | Scriptorium`;
+      } else {
+        document.title = `${activeProject.name} - Traduction | Scriptorium`;
+      }
+    } else {
+      document.title = "Scriptorium — Traducteur & Lecteur de Webnovel";
+    }
+  }, [activeTab, selectedProjectId, selectedChapterId, projects]);
+
   // Load projects from server disk on mount
   useEffect(() => {
     fetch("/api/projects")
