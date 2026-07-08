@@ -301,6 +301,7 @@ export default function App() {
   };
 
   const activeProject = projects.find(p => p.id === selectedProjectId);
+  const activeChapter = activeProject?.chapters.find(c => c.id === selectedChapterId);
 
   // Project Deletion
   const handleDeleteProject = (projectId: string) => {
@@ -584,7 +585,7 @@ export default function App() {
     }`}>
       
       {/* RICH BROWN HARVEST LITERARY HEADER */}
-      <header className="border-b border-amber-900/10 dark:border-stone-800 bg-white/95 dark:bg-[#201915]/95 backdrop-blur-md sticky top-0 z-40 px-6 py-4 shadow-sm transition-colors">
+      <header aria-hidden={activeTab === "lecture" ? "true" : undefined} className="border-b border-amber-900/10 dark:border-stone-800 bg-white/95 dark:bg-[#201915]/95 backdrop-blur-md sticky top-0 z-40 px-6 py-4 shadow-sm transition-colors">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
           
           <div className="flex items-center gap-3.5">
@@ -635,7 +636,7 @@ export default function App() {
       </header>
 
       {/* DUAL MODE SECTION TAB BAR (TRADUCTION vs LECTURE) */}
-      <div className="border-b border-amber-900/5 dark:border-stone-850 bg-amber-500/5 dark:bg-[#1d1916]/50 py-3 px-6 transition-colors">
+      <div aria-hidden={activeTab === "lecture" ? "true" : undefined} className="border-b border-amber-900/5 dark:border-stone-850 bg-amber-500/5 dark:bg-[#1d1916]/50 py-3 px-6 transition-colors">
         <div className="max-w-7xl mx-auto flex items-center gap-2">
           
           <button
@@ -663,7 +664,9 @@ export default function App() {
             id="tab-lecture"
           >
             <BookOpen className="w-4 h-4" />
-            <span>Onglet : Lecture Distraction-Free</span>
+            <span>
+              Lecture {activeChapter && activeChapter.status === "done" ? `(Ch. ${activeChapter.number})` : "Distraction-Free"}
+            </span>
           </button>
 
         </div>
@@ -754,7 +757,7 @@ export default function App() {
       </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-amber-900/10 dark:border-stone-850 bg-white/40 dark:bg-[#1d1916]/20 py-6 px-6 text-center text-[11px] text-stone-450 dark:text-stone-500 leading-normal font-sans">
+      <footer aria-hidden={activeTab === "lecture" ? "true" : undefined} className="border-t border-amber-900/10 dark:border-stone-850 bg-white/40 dark:bg-[#1d1916]/20 py-6 px-6 text-center text-[11px] text-stone-450 dark:text-stone-500 leading-normal font-sans">
         <div>
           Scriptorium Littéraire d’Antigravity IDE — Consistance terminologique assistée par IA.<br />
           Zéro distractions de diagnostic, focus absolu sur la fluidité et le plaisir de lecture.

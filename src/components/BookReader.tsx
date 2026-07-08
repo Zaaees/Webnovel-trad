@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { BookOpen, ChevronLeft, ChevronRight, Type, Palette, Compass, RefreshCw, Sparkles, Check } from "lucide-react";
 import { WebnovelProject, Chapter } from "../types";
 
@@ -29,6 +29,28 @@ export default function BookReader({
   const [readerTheme, setReaderTheme] = useState<"parchment" | "sepia" | "paper" | "darkwood">(
     isDarkMode ? "darkwood" : "parchment"
   );
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  // Scroll back to top and focus title on chapter change
+  useEffect(() => {
+    if (activeChapterId) {
+      // Reset inner container scroll
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = 0;
+      }
+      // Reset window scroll
+      window.scrollTo({ top: 0, behavior: "instant" });
+
+      // Focus the title for screen readers / Edge Read Aloud
+      const focusTimeout = setTimeout(() => {
+        titleRef.current?.focus();
+      }, 50);
+
+      return () => clearTimeout(focusTimeout);
+    }
+  }, [activeChapterId]);
 
   // Auto-mark as read timer when viewing a chapter
   useEffect(() => {
@@ -97,7 +119,7 @@ export default function BookReader({
     <div id="book-reader-container" className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
       
       {/* LEFT COLUMN: NOVEL & CHAPTER PICKER */}
-      <div className="lg:col-span-1 flex flex-col gap-4">
+      <div aria-hidden="true" className="hidden lg:flex lg:col-span-1 flex-col gap-4">
         
         {/* Project Selection in Book Mode */}
         <div className={`p-5 rounded-2xl border ${isDarkMode ? "bg-[#251e1a] border-stone-850 text-stone-200" : "bg-white border-amber-100 shadow-sm text-stone-900"} flex flex-col gap-3 transition-colors`}>
@@ -205,7 +227,7 @@ export default function BookReader({
           <div className={`rounded-3xl border shadow-md flex flex-col overflow-hidden min-h-[550px] transition-all bg-stone-50 ${getThemeClass()}`}>
             
             {/* HUD / Settings bar inside Book container */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-6 py-4 border-b border-black/5 dark:border-white/5 bg-black/2">
+            <div aria-hidden="true" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-6 py-4 border-b border-black/5 dark:border-white/5 bg-black/2">
               <div className="flex flex-col justify-center min-w-0">
                 <div className="flex items-center gap-1.5 opacity-60 font-sans text-[10px] font-bold tracking-widest uppercase">
                   <span>Chapitre {activeChapter.number}</span>
@@ -215,6 +237,48 @@ export default function BookReader({
                 <h2 className="font-bold text-sm md:text-base truncate max-w-sm font-serif tracking-tight">
                   {activeChapter.title}
                 </h2>
+
+                {/* Mobile Navigation Dropdowns */}
+                <div className="flex lg:hidden items-center gap-2 mt-2">
+                  <select
+                    value={selectedProjectId}
+                    onChange={(e) => {
+                      onSelectProject(e.target.value);
+                      setActiveChapterId(null);
+                    }}
+                    className={`border rounded-lg px-2 py-1 text-[11px] font-bold outline-none cursor-pointer transition max-w-[120px] ${
+                      isDarkMode 
+                        ? "bg-[#1d1916] border-stone-800 text-stone-300" 
+                        : "bg-white border-amber-100 text-stone-805"
+                    }`}
+                  >
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={activeChapterId || ""}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setActiveChapterId(e.target.value);
+                      }
+                    }}
+                    className={`border rounded-lg px-2 py-1 text-[11px] font-bold outline-none cursor-pointer transition max-w-[150px] ${
+                      isDarkMode 
+                        ? "bg-[#1d1916] border-stone-800 text-stone-300" 
+                        : "bg-white border-amber-100 text-stone-805"
+                    }`}
+                  >
+                    {sortedChapters.map((ch) => (
+                      <option key={ch.id} value={ch.id}>
+                        Ch. {ch.number} - {ch.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Adjusters HUD */}
@@ -313,29 +377,36 @@ export default function BookReader({
             </div>
 
             {/* Book Body Column wrapper */}
-            <div className="flex-1 overflow-y-auto px-6 sm:px-12 md:px-16 pt-10 pb-16 flex flex-col min-h-0">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-6 sm:px-12 md:px-16 pt-10 pb-16 flex flex-col min-h-0">
               <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col justify-between">
                 
-                {/* Elegant Title Header inside the page */}
-                <div className="text-center pb-8 border-b border-black/5 dark:border-white/5 mb-8">
-                  <div className="text-[11px] font-sans font-bold tracking-widest text-amber-800 dark:text-amber-550 uppercase">
-                    CHAPITRE {activeChapter.number}
+                {/* Wrap Title and Narrative text in an <article> element for Read Aloud */}
+                <article className="flex-1 flex flex-col justify-between">
+                  {/* Elegant Title Header inside the page */}
+                  <div className="text-center pb-8 border-b border-black/5 dark:border-white/5 mb-8">
+                    <div className="text-[11px] font-sans font-bold tracking-widest text-amber-800 dark:text-amber-550 uppercase">
+                      CHAPITRE {activeChapter.number}
+                    </div>
+                    <h1 
+                      ref={titleRef}
+                      tabIndex={-1}
+                      className="font-serif font-bold text-xl sm:text-2xl mt-1 tracking-tight outline-none"
+                    >
+                      {activeChapter.title}
+                    </h1>
                   </div>
-                  <h1 className="font-serif font-bold text-xl sm:text-2xl mt-1 tracking-tight">
-                    {activeChapter.title}
-                  </h1>
-                </div>
 
-                {/* Plain Narrative text (Lora serif, exquisite spacing) */}
-                <div
-                  style={{ fontSize: `${fontSize}px`, lineHeight: "1.9" }}
-                  className="whitespace-pre-line text-justify select-text focus:outline-none flex-1 font-serif selection:bg-amber-700/20"
-                >
-                  {activeChapter.translatedText}
-                </div>
+                  {/* Plain Narrative text (Lora serif, exquisite spacing) */}
+                  <div
+                    style={{ fontSize: `${fontSize}px`, lineHeight: "1.9" }}
+                    className="whitespace-pre-line text-justify select-text focus:outline-none flex-1 font-serif selection:bg-amber-700/20"
+                  >
+                    {activeChapter.translatedText}
+                  </div>
+                </article>
 
                 {/* Bottom Paginated Navigation UI */}
-                <div className="flex items-center justify-between border-t border-black/5 dark:border-white/5 pt-10 mt-12 font-sans font-medium text-xs">
+                <div aria-hidden="true" className="flex items-center justify-between border-t border-black/5 dark:border-white/5 pt-10 mt-12 font-sans font-medium text-xs">
                   {prevChapter ? (
                     <button
                       type="button"
