@@ -25,7 +25,7 @@ export default function BookReader({
   readChapterIds,
   onToggleRead,
 }: BookReaderProps) {
-  const [fontSize, setFontSize] = useState<number>(18);
+  const [fontSize, setFontSize] = useState<number>(20);
   const [readerTheme, setReaderTheme] = useState<"parchment" | "sepia" | "paper" | "darkwood">(
     isDarkMode ? "darkwood" : "parchment"
   );
