@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { BookOpen, ChevronLeft, ChevronRight, Type, Palette, Compass, RefreshCw, Sparkles, Check } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, Type, Palette, Compass, RefreshCw, Sparkles, Check, Maximize2, Minimize2 } from "lucide-react";
 import { WebnovelProject, Chapter } from "../types";
 
 interface BookReaderProps {
@@ -29,6 +29,30 @@ export default function BookReader({
   const [readerTheme, setReaderTheme] = useState<"parchment" | "sepia" | "paper" | "darkwood">(
     isDarkMode ? "darkwood" : "parchment"
   );
+  const [showChaptersMobile, setShowChaptersMobile] = useState<boolean>(false);
+  const [isZenMode, setIsZenMode] = useState<boolean>(() => {
+    return localStorage.getItem("reader_zen_mode") === "true";
+  });
+
+  // Sync zen mode state with HTML body class
+  useEffect(() => {
+    if (isZenMode) {
+      document.body.classList.add("zen-mode-active");
+    } else {
+      document.body.classList.remove("zen-mode-active");
+    }
+    localStorage.setItem("reader_zen_mode", isZenMode ? "true" : "false");
+    return () => {
+      document.body.classList.remove("zen-mode-active");
+    };
+  }, [isZenMode]);
+
+  // Close mobile chapters view when active chapter changes
+  useEffect(() => {
+    if (activeChapterId) {
+      setShowChaptersMobile(false);
+    }
+  }, [activeChapterId]);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -119,7 +143,7 @@ export default function BookReader({
     <div id="book-reader-container" className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
       
       {/* LEFT COLUMN: NOVEL & CHAPTER PICKER */}
-      <div aria-hidden="true" className="hidden lg:flex lg:col-span-1 flex-col gap-4">
+      <div className={`${showChaptersMobile || !activeChapter ? "flex" : "hidden lg:flex"} lg:col-span-1 flex-col gap-4`}>
         
         {/* Project Selection in Book Mode */}
         <div className={`p-5 rounded-2xl border ${isDarkMode ? "bg-[#251e1a] border-stone-850 text-stone-200" : "bg-white border-amber-100 shadow-sm text-stone-900"} flex flex-col gap-3 transition-colors`}>
@@ -170,6 +194,15 @@ export default function BookReader({
                 {sortedChapters.length} Traduit(s)
               </span>
             </div>
+            {activeChapter && (
+              <button
+                type="button"
+                onClick={() => setShowChaptersMobile(false)}
+                className="lg:hidden px-3 py-1.5 rounded-xl border border-stone-250 dark:border-stone-705 bg-stone-100/50 dark:bg-stone-800 text-stone-600 dark:text-stone-300 text-xs font-bold font-sans transition cursor-pointer hover:bg-stone-200 dark:hover:bg-stone-700"
+              >
+                Fermer
+              </button>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 max-h-[350px] lg:max-h-[500px]">
@@ -217,26 +250,38 @@ export default function BookReader({
           </div>
         </div>
 
-      </div>
-
-      {/* RIGHT COLUMN: CORE IMMERSIVE BOOK SHEET */}
-      <div className="lg:col-span-3 flex flex-col gap-4">
+      </div>      {/* RIGHT COLUMN: CORE IMMERSIVE BOOK SHEET */}
+      <div className={`${!showChaptersMobile && activeChapter ? "flex" : "hidden lg:flex"} lg:col-span-3 flex flex-col gap-4`}>
         
         {/* Book Sheet Container */}
         {activeChapter ? (
-          <div className={`rounded-3xl border shadow-md flex flex-col overflow-hidden min-h-[550px] transition-all bg-stone-50 ${getThemeClass()}`}>
+          <div className={`rounded-none md:rounded-3xl border-0 md:border shadow-none md:shadow-md flex flex-col md:overflow-hidden min-h-[550px] transition-all bg-stone-50 ${getThemeClass()}`}>
             
             {/* HUD / Settings bar inside Book container */}
             <div aria-hidden="true" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-6 py-4 border-b border-black/5 dark:border-white/5 bg-black/2">
               <div className="flex flex-col justify-center min-w-0">
-                <div className="flex items-center gap-1.5 opacity-60 font-sans text-[10px] font-bold tracking-widest uppercase">
-                  <span>Chapitre {activeChapter.number}</span>
-                  <span>•</span>
-                  <span className="truncate max-w-[120px]">{activeProject.name}</span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowChaptersMobile(true)}
+                    className="lg:hidden p-2 rounded-xl border border-stone-250 dark:border-stone-705 bg-stone-100/50 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-150 dark:hover:bg-stone-700 transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    id="btn-show-chapters-mobile"
+                    title="Afficher la liste des chapitres"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span className="text-xs font-bold font-sans">Chapitres</span>
+                  </button>
+                  <div className="flex flex-col justify-center min-w-0">
+                    <div className="flex items-center gap-1.5 opacity-60 font-sans text-[10px] font-bold tracking-widest uppercase">
+                      <span>Chapitre {activeChapter.number}</span>
+                      <span>•</span>
+                      <span className="truncate max-w-[120px]">{activeProject.name}</span>
+                    </div>
+                    <h2 className="font-bold text-sm md:text-base truncate max-w-sm font-serif tracking-tight">
+                      {activeChapter.title}
+                    </h2>
+                  </div>
                 </div>
-                <h2 className="font-bold text-sm md:text-base truncate max-w-sm font-serif tracking-tight">
-                  {activeChapter.title}
-                </h2>
 
                 {/* Mobile Navigation Dropdowns */}
                 <div className="flex lg:hidden items-center gap-2 mt-2">
@@ -373,17 +418,33 @@ export default function BookReader({
                   />
                 </div>
 
+                {/* Zen/Immersive Mode Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setIsZenMode(!isZenMode)}
+                  className={`p-1.5 px-2.5 rounded-xl border transition flex items-center justify-center cursor-pointer shadow-sm ${
+                    isZenMode
+                      ? "bg-amber-700 border-amber-600 text-white font-bold"
+                      : "bg-stone-100/50 dark:bg-stone-800 border-stone-250 dark:border-stone-705 text-stone-600 dark:text-stone-300 hover:bg-stone-150 dark:hover:bg-[#251e1a]"
+                  }`}
+                  title={isZenMode ? "Quitter la lecture immersive (Normal)" : "Passer en lecture immersive (Zen)"}
+                  id="btn-toggle-zen-mode"
+                >
+                  {isZenMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                  <span className="text-[11px] font-sans font-bold ml-1 hidden sm:inline">{isZenMode ? "Normal" : "Zen"}</span>
+                </button>
+
               </div>
             </div>
 
             {/* Book Body Column wrapper */}
-            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-6 sm:px-12 md:px-16 pt-10 pb-16 flex flex-col min-h-0">
+            <div ref={scrollContainerRef} className="flex-1 md:overflow-y-auto px-4 sm:px-12 md:px-16 pt-6 md:pt-10 pb-16 flex flex-col min-h-0">
               <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col justify-between">
                 
                 {/* Wrap Title and Narrative text in an <article> element for Read Aloud */}
                 <article className="flex-1 flex flex-col justify-between">
                   {/* Elegant Title Header inside the page */}
-                  <div className="text-center pb-8 border-b border-black/5 dark:border-white/5 mb-8">
+                  <div className="text-center pb-6 md:pb-8 border-b border-black/5 dark:border-white/5 mb-6 md:mb-8">
                     <div className="text-[11px] font-sans font-bold tracking-widest text-amber-800 dark:text-amber-550 uppercase">
                       CHAPITRE {activeChapter.number}
                     </div>
@@ -399,7 +460,7 @@ export default function BookReader({
                   {/* Plain Narrative text (Lora serif, exquisite spacing) */}
                   <div
                     style={{ fontSize: `${fontSize}px`, lineHeight: "1.9" }}
-                    className="whitespace-pre-line text-justify select-text focus:outline-none flex-1 font-serif selection:bg-amber-700/20"
+                    className="whitespace-pre-line text-left md:text-justify select-text focus:outline-none flex-1 font-serif selection:bg-amber-700/20"
                   >
                     {activeChapter.translatedText}
                   </div>
