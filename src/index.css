@@ -41,9 +41,15 @@
   background-color: #1d1916;
   color: #ded1be;
 }
+
 /* Mode Zen / Lecture immersive */
 body.zen-mode-active #main-header,
 body.zen-mode-active #navigation-tabs,
 body.zen-mode-active #main-footer {
   display: none !important;
+}
+
+html, body, #root, #book-reader-container {
+  overflow-x: hidden !important;
+  max-width: 100vw;
 }

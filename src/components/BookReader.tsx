@@ -250,84 +250,66 @@ export default function BookReader({
           </div>
         </div>
 
-      </div>      {/* RIGHT COLUMN: CORE IMMERSIVE BOOK SHEET */}
+      </div>
+      
+      {/* RIGHT COLUMN: CORE IMMERSIVE BOOK SHEET */}
       <div className={`${!showChaptersMobile && activeChapter ? "flex" : "hidden lg:flex"} lg:col-span-3 flex flex-col gap-4`}>
         
         {/* Book Sheet Container */}
         {activeChapter ? (
           <div className={`rounded-none md:rounded-3xl border-0 md:border shadow-none md:shadow-md flex flex-col md:overflow-hidden min-h-[550px] transition-all bg-stone-50 ${getThemeClass()}`}>
             
-            {/* HUD / Settings bar inside Book container */}
-            <div aria-hidden="true" className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-6 py-4 border-b border-black/5 dark:border-white/5 bg-black/2">
+            {/* MOBILE MINIMALIST HUD */}
+            <div className="flex md:hidden items-center justify-between px-4 py-2.5 border-b border-black/5 dark:border-white/5 bg-black/2 font-sans select-none">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowChaptersMobile(true)}
+                  className="p-1.5 px-2.5 rounded-xl border border-stone-250 dark:border-stone-705 bg-stone-50 dark:bg-stone-850 text-stone-700 dark:text-stone-300 text-xs font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer hover:bg-stone-200 dark:hover:bg-stone-700 shadow-sm"
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-amber-700 dark:text-amber-500" />
+                  <span>Chapitres</span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setIsZenMode(!isZenMode)}
+                  className={`p-1.5 rounded-xl border transition flex items-center justify-center cursor-pointer shadow-sm ${
+                    isZenMode
+                      ? "bg-amber-700 border-amber-600 text-white font-bold"
+                      : "bg-stone-50 dark:bg-stone-855 border-stone-250 dark:border-stone-705 text-stone-700 dark:text-stone-300 hover:bg-stone-205 dark:hover:bg-stone-700"
+                  }`}
+                  title={isZenMode ? "Quitter le mode lecture immersive" : "Activer le mode lecture immersive"}
+                >
+                  {isZenMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              <div className="text-right min-w-0">
+                <span className="text-[9px] opacity-60 font-bold uppercase tracking-wider block leading-none">
+                  Chapitre {activeChapter.number}
+                </span>
+                <span className="text-xs font-serif font-bold truncate max-w-[150px] block mt-0.5">
+                  {activeChapter.title}
+                </span>
+              </div>
+            </div>
+
+            {/* DESKTOP FULL FEATURED HUD */}
+            <div aria-hidden="true" className="hidden md:flex flex-row items-center justify-between gap-3 px-6 py-4 border-b border-black/5 dark:border-white/5 bg-black/2">
               <div className="flex flex-col justify-center min-w-0">
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowChaptersMobile(true)}
-                    className="lg:hidden p-2 rounded-xl border border-stone-250 dark:border-stone-705 bg-stone-100/50 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-150 dark:hover:bg-stone-700 transition cursor-pointer flex items-center gap-1.5 shadow-sm"
-                    id="btn-show-chapters-mobile"
-                    title="Afficher la liste des chapitres"
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    <span className="text-xs font-bold font-sans">Chapitres</span>
-                  </button>
-                  <div className="flex flex-col justify-center min-w-0">
-                    <div className="flex items-center gap-1.5 opacity-60 font-sans text-[10px] font-bold tracking-widest uppercase">
-                      <span>Chapitre {activeChapter.number}</span>
-                      <span>•</span>
-                      <span className="truncate max-w-[120px]">{activeProject.name}</span>
-                    </div>
-                    <h2 className="font-bold text-sm md:text-base truncate max-w-sm font-serif tracking-tight">
-                      {activeChapter.title}
-                    </h2>
-                  </div>
+                <div className="flex items-center gap-1.5 opacity-60 font-sans text-[10px] font-bold tracking-widest uppercase">
+                  <span>Chapitre {activeChapter.number}</span>
+                  <span>•</span>
+                  <span className="truncate max-w-[120px]">{activeProject.name}</span>
                 </div>
-
-                {/* Mobile Navigation Dropdowns */}
-                <div className="flex lg:hidden items-center gap-2 mt-2">
-                  <select
-                    value={selectedProjectId}
-                    onChange={(e) => {
-                      onSelectProject(e.target.value);
-                      setActiveChapterId(null);
-                    }}
-                    className={`border rounded-lg px-2 py-1 text-[11px] font-bold outline-none cursor-pointer transition max-w-[120px] ${
-                      isDarkMode 
-                        ? "bg-[#1d1916] border-stone-800 text-stone-300" 
-                        : "bg-white border-amber-100 text-stone-805"
-                    }`}
-                  >
-                    {projects.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={activeChapterId || ""}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        setActiveChapterId(e.target.value);
-                      }
-                    }}
-                    className={`border rounded-lg px-2 py-1 text-[11px] font-bold outline-none cursor-pointer transition max-w-[150px] ${
-                      isDarkMode 
-                        ? "bg-[#1d1916] border-stone-800 text-stone-300" 
-                        : "bg-white border-amber-100 text-stone-805"
-                    }`}
-                  >
-                    {sortedChapters.map((ch) => (
-                      <option key={ch.id} value={ch.id}>
-                        Ch. {ch.number} - {ch.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <h2 className="font-bold text-sm md:text-base truncate max-w-sm font-serif tracking-tight">
+                  {activeChapter.title}
+                </h2>
               </div>
 
               {/* Adjusters HUD */}
-              <div className="flex flex-wrap items-center gap-2 flex-shrink-0 self-end sm:self-auto">
+              <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
                 
                 {/* Lu / Non Lu Toggle Button */}
                 <button
@@ -361,7 +343,7 @@ export default function BookReader({
                   title="Copier le lien direct vers cette page spécifique pour l'enregistrer dans vos favoris"
                   id="btn-copy-bookmark-link"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-700 dark:text-amber-500" />
+                  <Sparkles className="w-3.5 h-3.5 text-amber-700 dark:text-amber-550" />
                   <span>Lien Favori</span>
                 </button>
 
