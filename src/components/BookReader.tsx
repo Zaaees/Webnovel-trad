@@ -25,7 +25,7 @@ export default function BookReader({
   readChapterIds,
   onToggleRead,
 }: BookReaderProps) {
-  const [fontSize, setFontSize] = useState<number>(20);
+  const [fontSize, setFontSize] = useState<number>(36);
   const [readerTheme, setReaderTheme] = useState<"parchment" | "sepia" | "paper" | "darkwood">(
     isDarkMode ? "darkwood" : "parchment"
   );
@@ -351,7 +351,7 @@ export default function BookReader({
                 <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/5 rounded-xl p-1 border border-black/10 dark:border-white/10 font-sans">
                   <button
                     type="button"
-                    onClick={() => setFontSize(Math.max(14, fontSize - 1))}
+                    onClick={() => setFontSize(Math.max(16, fontSize - 2))}
                     className="p-1 px-2.5 text-[11px] font-bold rounded-lg hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer transition active:scale-90"
                     title="Diminuer la taille"
                     id="btn-font-dec"
@@ -363,7 +363,7 @@ export default function BookReader({
                   </span>
                   <button
                     type="button"
-                    onClick={() => setFontSize(Math.min(28, fontSize + 1))}
+                    onClick={() => setFontSize(Math.min(60, fontSize + 2))}
                     className="p-1 px-2.5 text-[11px] font-bold rounded-lg hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer transition active:scale-90"
                     title="Augmenter la taille"
                     id="btn-font-inc"
