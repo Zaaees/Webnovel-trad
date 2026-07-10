@@ -675,7 +675,7 @@ export default function App() {
       {/* CORE FRAMEWORK CONTAINER */}
       <main className={`flex-1 max-w-7xl w-full mx-auto flex flex-col min-h-0 ${
         activeTab === "lecture" 
-          ? "p-0 md:p-6 lg:p-8 gap-0 md:gap-6" 
+          ? "p-0 lg:p-6 lg:p-8 gap-0 lg:gap-6" 
           : "p-4 sm:p-6 lg:p-8 gap-6"
       }`}>
         

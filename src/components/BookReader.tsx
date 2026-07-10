@@ -257,17 +257,17 @@ export default function BookReader({
         
         {/* Book Sheet Container */}
         {activeChapter ? (
-          <div className={`rounded-none md:rounded-3xl border-0 md:border shadow-none md:shadow-md flex flex-col md:overflow-hidden min-h-[550px] transition-all bg-stone-50 ${getThemeClass()}`}>
+          <div className={`rounded-none lg:rounded-3xl border-0 lg:border shadow-none lg:shadow-md flex flex-col lg:overflow-hidden min-h-[550px] transition-all bg-stone-50 ${getThemeClass()}`}>
             
             {/* MOBILE MINIMALIST HUD */}
-            <div className="flex md:hidden items-center justify-between px-4 py-2.5 border-b border-black/5 dark:border-white/5 bg-black/2 font-sans select-none">
+            <div className="flex lg:hidden items-center justify-between px-4 py-2.5 border-b border-black/5 dark:border-white/5 bg-black/2 font-sans select-none">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowChaptersMobile(true)}
                   className="p-1.5 px-2.5 rounded-xl border border-stone-250 dark:border-stone-705 bg-stone-50 dark:bg-stone-850 text-stone-700 dark:text-stone-300 text-xs font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer hover:bg-stone-200 dark:hover:bg-stone-700 shadow-sm"
                 >
-                  <BookOpen className="w-3.5 h-3.5 text-amber-700 dark:text-amber-500" />
+                  <BookOpen className="w-3.5 h-3.5 text-amber-700 dark:text-amber-550" />
                   <span>Chapitres</span>
                 </button>
                 
@@ -296,7 +296,7 @@ export default function BookReader({
             </div>
 
             {/* DESKTOP FULL FEATURED HUD */}
-            <div aria-hidden="true" className="hidden md:flex flex-row items-center justify-between gap-3 px-6 py-4 border-b border-black/5 dark:border-white/5 bg-black/2">
+            <div aria-hidden="true" className="hidden lg:flex flex-row items-center justify-between gap-3 px-6 py-4 border-b border-black/5 dark:border-white/5 bg-black/2">
               <div className="flex flex-col justify-center min-w-0">
                 <div className="flex items-center gap-1.5 opacity-60 font-sans text-[10px] font-bold tracking-widest uppercase">
                   <span>Chapitre {activeChapter.number}</span>
@@ -420,13 +420,13 @@ export default function BookReader({
             </div>
 
             {/* Book Body Column wrapper */}
-            <div ref={scrollContainerRef} className="flex-1 md:overflow-y-auto px-1 sm:px-12 md:px-16 pt-6 md:pt-10 pb-16 flex flex-col min-h-0">
-              <div className="md:max-w-2xl mx-auto w-full flex-1 flex flex-col justify-between">
+            <div ref={scrollContainerRef} className="flex-1 lg:overflow-y-auto px-2 lg:px-16 pt-6 lg:pt-10 pb-16 flex flex-col min-h-0">
+              <div className="lg:max-w-2xl mx-auto w-full flex-1 flex flex-col justify-between">
                 
                 {/* Wrap Title and Narrative text in an <article> element for Read Aloud */}
                 <article className="flex-1 flex flex-col justify-between">
                   {/* Elegant Title Header inside the page */}
-                  <div className="text-center pb-6 md:pb-8 border-b border-black/5 dark:border-white/5 mb-6 md:mb-8">
+                  <div className="text-center pb-6 lg:pb-8 border-b border-black/5 dark:border-white/5 mb-6 lg:mb-8">
                     <div className="text-[11px] font-sans font-bold tracking-widest text-amber-800 dark:text-amber-550 uppercase">
                       CHAPITRE {activeChapter.number}
                     </div>
@@ -442,7 +442,7 @@ export default function BookReader({
                   {/* Plain Narrative text (Lora serif, exquisite spacing) */}
                   <div
                     style={{ fontSize: `${fontSize}px`, lineHeight: "1.9" }}
-                    className="whitespace-pre-line text-left md:text-justify select-text focus:outline-none flex-1 font-serif selection:bg-amber-700/20"
+                    className="whitespace-pre-line text-left lg:text-justify select-text focus:outline-none flex-1 font-serif selection:bg-amber-700/20"
                   >
                     {activeChapter.translatedText}
                   </div>
