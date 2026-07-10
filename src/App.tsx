@@ -735,7 +735,7 @@ export default function App() {
           </div>
         ) : (
           /* LECTURE SECTION: Dedicated physical book simulation */
-          <div className="animate-fadeIn">
+          <div className="animate-fadeIn w-full flex-1 flex flex-col">
             <BookReader
               projects={projects}
               selectedProjectId={selectedProjectId}

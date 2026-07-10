@@ -420,8 +420,8 @@ export default function BookReader({
             </div>
 
             {/* Book Body Column wrapper */}
-            <div ref={scrollContainerRef} className="flex-1 md:overflow-y-auto px-4 sm:px-12 md:px-16 pt-6 md:pt-10 pb-16 flex flex-col min-h-0">
-              <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col justify-between">
+            <div ref={scrollContainerRef} className="flex-1 md:overflow-y-auto px-1 sm:px-12 md:px-16 pt-6 md:pt-10 pb-16 flex flex-col min-h-0">
+              <div className="md:max-w-2xl mx-auto w-full flex-1 flex flex-col justify-between">
                 
                 {/* Wrap Title and Narrative text in an <article> element for Read Aloud */}
                 <article className="flex-1 flex flex-col justify-between">
