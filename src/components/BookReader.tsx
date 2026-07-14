@@ -33,6 +33,9 @@ export default function BookReader({
   const [isZenMode, setIsZenMode] = useState<boolean>(() => {
     return localStorage.getItem("reader_zen_mode") === "true";
   });
+  const [showToast, setShowToast] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const wakeLockRef = useRef<any>(null);
 
   // Sync zen mode state with HTML body class
   useEffect(() => {
@@ -47,6 +50,64 @@ export default function BookReader({
     };
   }, [isZenMode]);
 
+  // Screen Wake Lock to prevent screen sleep during reading
+  useEffect(() => {
+    let active = true;
+
+    async function requestWakeLock() {
+      if (!activeChapterId) {
+        await releaseWakeLock();
+        return;
+      }
+
+      if ("wakeLock" in navigator) {
+        try {
+          if (wakeLockRef.current) {
+            await wakeLockRef.current.release();
+            wakeLockRef.current = null;
+          }
+
+          const sentinel = await (navigator as any).wakeLock.request("screen");
+          if (!active) {
+            await sentinel.release();
+            return;
+          }
+
+          wakeLockRef.current = sentinel;
+        } catch (err) {
+          console.warn("Screen Wake Lock failed to acquire:", err);
+        }
+      }
+    }
+
+    async function releaseWakeLock() {
+      if (wakeLockRef.current) {
+        try {
+          await wakeLockRef.current.release();
+        } catch (err) {
+          console.error("Error releasing Wake Lock:", err);
+        }
+        wakeLockRef.current = null;
+      }
+    }
+
+    requestWakeLock();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      active = false;
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      releaseWakeLock();
+    };
+  }, [activeChapterId]);
+
   // Close mobile chapters view when active chapter changes
   useEffect(() => {
     if (activeChapterId) {
@@ -57,24 +118,49 @@ export default function BookReader({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
-  // Scroll back to top and focus title on chapter change
+  // Scroll back to top or restore reading position on chapter change
   useEffect(() => {
     if (activeChapterId) {
-      // Reset inner container scroll
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop = 0;
+      const savedParaIndex = localStorage.getItem(`reader_progress_${selectedProjectId}_${activeChapterId}`);
+
+      if (savedParaIndex !== null) {
+        const index = parseInt(savedParaIndex, 10);
+        const focusTimeout = setTimeout(() => {
+          const container = scrollContainerRef.current;
+          const element = container?.querySelector(`[data-para-index="${index}"]`);
+          if (element) {
+            element.scrollIntoView({ behavior: "auto", block: "center" });
+            setToastMessage(`Lecture reprise au paragraphe ${index + 1}`);
+            setShowToast(true);
+          } else {
+            if (container) container.scrollTop = 0;
+            window.scrollTo({ top: 0, behavior: "instant" });
+            titleRef.current?.focus();
+          }
+        }, 100);
+        return () => clearTimeout(focusTimeout);
+      } else {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = 0;
+        }
+        window.scrollTo({ top: 0, behavior: "instant" });
+        const focusTimeout = setTimeout(() => {
+          titleRef.current?.focus();
+        }, 50);
+        return () => clearTimeout(focusTimeout);
       }
-      // Reset window scroll
-      window.scrollTo({ top: 0, behavior: "instant" });
-
-      // Focus the title for screen readers / Edge Read Aloud
-      const focusTimeout = setTimeout(() => {
-        titleRef.current?.focus();
-      }, 50);
-
-      return () => clearTimeout(focusTimeout);
     }
-  }, [activeChapterId]);
+  }, [activeChapterId, selectedProjectId]);
+
+  // Auto-hide toast after 2.5 seconds
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
   // Auto-mark as read timer when viewing a chapter
   useEffect(() => {
@@ -87,6 +173,8 @@ export default function BookReader({
       return () => clearTimeout(timer);
     }
   }, [activeChapterId, readChapterIds, onToggleRead]);
+
+
 
   // Sync reader theme with dark mode toggle
   useEffect(() => {
@@ -124,6 +212,42 @@ export default function BookReader({
   const currentIndex = sortedChapters.findIndex((c) => c.id === activeChapterId);
   const prevChapter = currentIndex > 0 ? sortedChapters[currentIndex - 1] : null;
   const nextChapter = currentIndex < sortedChapters.length - 1 ? sortedChapters[currentIndex + 1] : null;
+
+  // Keep track of which paragraph is currently visible in the center area of the screen
+  useEffect(() => {
+    if (!activeChapterId || !scrollContainerRef.current || !activeChapter?.translatedText) return;
+
+    const container = scrollContainerRef.current;
+    const paragraphs = container.querySelectorAll(".paragraph-item");
+    if (paragraphs.length === 0) return;
+
+    const observerOptions = {
+      root: null,
+      rootMargin: "-25% 0px -55% 0px", // Focus area around upper middle
+      threshold: 0.1,
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const indexAttr = entry.target.getAttribute("data-para-index");
+          if (indexAttr !== null) {
+            const index = parseInt(indexAttr, 10);
+            localStorage.setItem(
+              `reader_progress_${selectedProjectId}_${activeChapterId}`,
+              index.toString()
+            );
+          }
+        }
+      });
+    }, observerOptions);
+
+    paragraphs.forEach((p) => observer.observe(p));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [activeChapterId, selectedProjectId, activeChapter?.translatedText]);
 
   const getThemeClass = () => {
     switch (readerTheme) {
@@ -442,9 +566,23 @@ export default function BookReader({
                   {/* Plain Narrative text (Lora serif, exquisite spacing) */}
                   <div
                     style={{ fontSize: `${fontSize}px`, lineHeight: "1.9" }}
-                    className="whitespace-pre-line text-left lg:text-justify select-text focus:outline-none flex-1 font-serif selection:bg-amber-700/20"
+                    className="text-left lg:text-justify select-text focus:outline-none flex-1 font-serif selection:bg-amber-700/20 space-y-5"
                   >
-                    {activeChapter.translatedText}
+                    {activeChapter.translatedText
+                      ? activeChapter.translatedText.split(/\n+/).map((para, index) => {
+                          const trimmed = para.trim();
+                          if (!trimmed) return null;
+                          return (
+                            <p
+                              key={index}
+                              data-para-index={index}
+                              className="paragraph-item transition-all duration-200 hover:bg-amber-500/5 dark:hover:bg-amber-500/2 px-2 -mx-2 rounded-lg"
+                            >
+                              {trimmed}
+                            </p>
+                          );
+                        })
+                      : null}
                   </div>
                 </article>
 
@@ -503,6 +641,14 @@ export default function BookReader({
         )}
 
       </div>
+
+      {/* Toast de restauration de lecture */}
+      {showToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-amber-800 text-amber-50 dark:bg-stone-800 dark:text-stone-100 px-4 py-3 rounded-2xl shadow-xl border border-amber-600/20 dark:border-stone-700 flex items-center gap-2 animate-fadeIn transition-all duration-300 pointer-events-none select-none max-w-sm font-sans text-xs font-bold leading-none">
+          <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
     </div>
   );
