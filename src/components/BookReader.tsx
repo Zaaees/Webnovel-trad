@@ -63,11 +63,15 @@ export default function BookReader({
       if ("wakeLock" in navigator) {
         try {
           if (wakeLockRef.current) {
-            await wakeLockRef.current.release();
-            wakeLockRef.current = null;
+            return;
           }
 
           const sentinel = await (navigator as any).wakeLock.request("screen");
+          
+          sentinel.addEventListener("release", () => {
+            wakeLockRef.current = null;
+          });
+
           if (!active) {
             await sentinel.release();
             return;
@@ -96,14 +100,28 @@ export default function BookReader({
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         requestWakeLock();
+      } else {
+        releaseWakeLock();
       }
     };
 
+    const handleUserInteraction = () => {
+      requestWakeLock();
+    };
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    const interactionEvents = ["click", "touchstart", "scroll", "keydown"];
+    interactionEvents.forEach(event => {
+      document.addEventListener(event, handleUserInteraction, { passive: true });
+    });
 
     return () => {
       active = false;
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      interactionEvents.forEach(event => {
+        document.removeEventListener(event, handleUserInteraction);
+      });
       releaseWakeLock();
     };
   }, [activeChapterId]);
