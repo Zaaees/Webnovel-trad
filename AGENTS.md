@@ -62,7 +62,7 @@ Exécutez ce pipeline pour chaque chapitre de manière extrêmement méticuleuse
   - `validationNotes`: "Rapport court d'alignement..."
   - `translatedText`: "Le texte poli de l'étape C..."
 - Mettez à jour également le tableau `glossary` du projet avec les nouveaux termes de lore déduits à l'Étape Préliminaire 0.
-- Utilisez `create_file` avec `Overwrite: true` pour réécrire le fichier `/data/projects.json` avec le JSON formaté mis à jour.
+- Utilisez `create_file` avec `Overwrite: true` pour réécrire les fichiers `/data/projects.json` et `/public/data/projects.json` avec le JSON formaté mis à jour afin d'assurer la synchronisation et l'affichage dans l'application.
 - **CRITICAL**: Veillez à ne détruire aucun autre projet ou chapitre existant dans le fichier JSON lors de la réécriture ! Préservez l'intégralité du fichier.
 
 ### 5. Notification utilisateur
@@ -96,7 +96,7 @@ Lorsqu'un utilisateur vous demande d'ajouter un terme ou d'en générer un, exec
     "notes": "<La définition et note rédigée en français>"
   }
   ```
-- Remplissez fidèlement et sauvegardez le fichier `/data/projects.json` avec `create_file` et `Overwrite: true`.
+- Remplissez fidèlement et sauvegardez les fichiers `/data/projects.json` et `/public/data/projects.json` avec `create_file` et `Overwrite: true` afin d'assurer l'affichage immédiat dans l'application.
 
 ### 4. Notification
 - Affichez au lecteur un récapitulatif chaleureux du terme ajouté (Original, Traduction conseillée, Explication).
