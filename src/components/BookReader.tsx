@@ -285,7 +285,7 @@ export default function BookReader({
     <div id="book-reader-container" className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
       
       {/* LEFT COLUMN: NOVEL & CHAPTER PICKER */}
-      <div className={`${showChaptersMobile || !activeChapter ? "flex" : "hidden lg:flex"} lg:col-span-1 flex-col gap-4`}>
+      <div aria-hidden="true" className={`${showChaptersMobile || !activeChapter ? "flex" : "hidden lg:flex"} lg:col-span-1 flex-col gap-4`}>
         
         {/* Project Selection in Book Mode */}
         <div className={`p-5 rounded-2xl border ${isDarkMode ? "bg-[#251e1a] border-stone-850 text-stone-200" : "bg-white border-amber-100 shadow-sm text-stone-900"} flex flex-col gap-3 transition-colors`}>
@@ -402,7 +402,7 @@ export default function BookReader({
           <div className={`rounded-none lg:rounded-3xl border-0 lg:border shadow-none lg:shadow-md flex flex-col lg:overflow-hidden min-h-[550px] transition-all bg-stone-50 ${getThemeClass()}`}>
             
             {/* MOBILE MINIMALIST HUD */}
-            <div className="flex lg:hidden items-center justify-between px-4 py-2.5 border-b border-black/5 dark:border-white/5 bg-black/2 font-sans select-none">
+            <div aria-hidden="true" className="flex lg:hidden items-center justify-between px-4 py-2.5 border-b border-black/5 dark:border-white/5 bg-black/2 font-sans select-none">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -569,7 +569,7 @@ export default function BookReader({
                 <article className="flex-1 flex flex-col justify-between">
                   {/* Elegant Title Header inside the page */}
                   <div className="text-center pb-6 lg:pb-8 border-b border-black/5 dark:border-white/5 mb-6 lg:mb-8">
-                    <div className="text-[11px] font-sans font-bold tracking-widest text-amber-800 dark:text-amber-550 uppercase">
+                    <div aria-hidden="true" className="text-[11px] font-sans font-bold tracking-widest text-amber-800 dark:text-amber-550 uppercase">
                       CHAPITRE {activeChapter.number}
                     </div>
                     <h1 
@@ -662,7 +662,7 @@ export default function BookReader({
 
       {/* Toast de restauration de lecture */}
       {showToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-amber-800 text-amber-50 dark:bg-stone-800 dark:text-stone-100 px-4 py-3 rounded-2xl shadow-xl border border-amber-600/20 dark:border-stone-700 flex items-center gap-2 animate-fadeIn transition-all duration-300 pointer-events-none select-none max-w-sm font-sans text-xs font-bold leading-none">
+        <div aria-hidden="true" className="fixed bottom-6 right-6 z-50 bg-amber-800 text-amber-50 dark:bg-stone-800 dark:text-stone-100 px-4 py-3 rounded-2xl shadow-xl border border-amber-600/20 dark:border-stone-700 flex items-center gap-2 animate-fadeIn transition-all duration-300 pointer-events-none select-none max-w-sm font-sans text-xs font-bold leading-none">
           <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
