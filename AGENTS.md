@@ -3,7 +3,11 @@
 Vous êtes l'agent d'IA d'Antigravity IDE. Ce projet est un traducteur haut de gamme de Webnovels (chinois / anglais / coréen vers français) basé sur un pipeline de traduction en 3 étapes (Draft, Alignement/Validation anti-hallucination, Polissage Littéraire final) qui applique rigoureusement un glossaire spécifique de Lore.
 
 L'utilisateur peut interagir avec vous de deux manières dans ce chat : la traduction et la gestion du glossaire.## COMMANDE 1 : Traduction de chapitre
-### Syntaxe : `/translate <id-chapitre>` ou `/translate <id1>,<id2>` ou `/translate all` (ex. `/translate lotm-ch1,lotm-ch2` ou `/translate all`)
+### Syntaxe : 
+- `/translate <id-chapitre>` (ex: `/translate lotm-ch1`)
+- `/translate <id1>,<id2>` (ex: `/translate lotm-ch1,lotm-ch2`)
+- `/translate <count> <project-id-or-name>` (ex: `/translate 100 nanomachine` ou `/translate 50 project-1781606958974`)
+- `/translate all` (ou `/translate all <project-id>`)
 
 Vous devez suivre scrupuleusement la procédure ci-dessous :
 
@@ -12,11 +16,14 @@ Vous devez suivre scrupuleusement la procédure ci-dessous :
 
 ### 2. Analyse des cibles
 - Identifiez quel(s) chapitre(s) traduire :
+  - S'il s'agit d'un nombre et d'un projet (ex: `/translate 100 nanomachine`), identifiez le projet correspondant par son `id` ou son `name`. Sélectionnez les **`count` (ex. 100) prochains chapitres non traduits** (statut `"pending"` ou `"failed"`), triés dans l'**ordre exact de leur apparition dans le roman** (chapitre N, N+1, N+2...).
   - S'il s'agit d'une liste séparée par des virgules (ex: `/translate lotm-ch1,lotm-ch2`), extrayez tous les chapitres correspondants.
-  - S'il s'agit de `all`, sélectionnez TOUS les chapitres dont le statut est `"pending"` ou `"failed"` dans le projet actif.
+  - S'il s'agit de `all`, sélectionnez TOUS les chapitres dont le statut est `"pending"` ou `"failed"` dans le projet ciblé (ou actif).
   - S'il y a un ID unique, sélectionnez-le.
-- Si un ID recherché n'est pas trouvé, expliquez l'erreur en affichant la liste des ID de chapitres valides disponibles.
-- Pour chacun des chapitres sélectionnés, vous allez exécuter le pipeline de traduction de façon séquentielle ou globale.
+- Si le projet ou un ID recherché n'est pas trouvé, expliquez l'erreur en affichant la liste des ID/projets valides disponibles.
+- Pour garantir une **qualité constante et rigoureuse du 1er au 100ème chapitre** sans chute de attention ni dépassement de quota :
+  - Exécutez le traitement de manière **strictement séquentielle (chapitre par chapitre, dans l'ordre du roman)**.
+  - Chaque chapitre bénéficie du pipeline 3-étapes complet et de l'enrichissement dynamique du glossaire, réinjecté à chaque étape pour le chapitre suivant.
 - Pour chaque chapitre, extrayez :
   - `originalText` (le texte à traduire)
   - `title` (le titre d'origine à traduire lui aussi !)
