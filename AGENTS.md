@@ -21,14 +21,17 @@ Vous devez suivre scrupuleusement la procédure ci-dessous :
   - S'il s'agit de `all`, sélectionnez TOUS les chapitres dont le statut est `"pending"` ou `"failed"` dans le projet ciblé (ou actif).
   - S'il y a un ID unique, sélectionnez-le.
 - Si le projet ou un ID recherché n'est pas trouvé, expliquez l'erreur en affichant la liste des ID/projets valides disponibles.
-- Pour garantir une **qualité constante et rigoureuse du 1er au 100ème chapitre** sans chute de attention ni dépassement de quota :
-  - Exécutez le traitement de manière **strictement séquentielle (chapitre par chapitre, dans l'ordre du roman)**.
-  - Chaque chapitre bénéficie du pipeline 3-étapes complet et de l'enrichissement dynamique du glossaire, réinjecté à chaque étape pour le chapitre suivant.
+
+### 2.1 Exécution Séquentielle Obligatoire (Anti-Raccourci)
+- Pour garantir la **qualité et la fidélité littéraire maximales du 1er au dernier chapitre** :
+  - Vous devez traiter les chapitres **STRICTEMENT UN PAR UN, D'AFFILÉE**.
+  - **INTERDICTION ABSOLUE** de créer un script de raccourci qui ne traduit que les titres ou qui génère du texte factice !
+  - Pour CHAQUE chapitre individuel du lot, vous devez dérouler l'intégralité du pipeline ci-dessous (Extraction Lore -> Étape -1 -> Étape A -> Étape B -> Étape C -> Sauvegarde) avant de passer physiquement au chapitre suivant.
 - Pour chaque chapitre, extrayez :
-  - `originalText` (le texte à traduire)
-  - `title` (le titre d'origine à traduire lui aussi !)
+  - `originalText` (le texte complet à traduire)
+  - `title` (le titre d'origine)
   - `sourceLang` (CN, EN ou KR)
-  - `glossary` (le tableau des concepts de lore avec original, translation et notes).
+  - `glossary` (le tableau des concepts de lore).
 
 ### 3. Exécution du Pipeline de Traduction avec intégration stricte du Glossaire et traduction du titre
 Exécutez ce pipeline pour chaque chapitre de manière extrêmement méticuleuse dans votre propre prompt :
