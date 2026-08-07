@@ -52,31 +52,41 @@ Exécutez ce pipeline pour chaque chapitre de manière extrêmement méticuleuse
 - Créez une table d'association claire des termes repérés : `[Terme original dans le texte] -> [Traduction officielle / Note]`.
 - Cette liste d'alignement sert de filtre de validation préalable et impératif pour les étapes suivantes.
 
-#### Étape A : Premier jet (Draft)
+#### Étape A : Premier jet (Draft Exhaustif)
 - Traduisez le texte original en vous basant sur la table de cartographie et en respectant le glossaire à la lettre.
+- **INTERDICTION ABSOLUE DE RÉSUMER** : Le premier jet doit traduire l'intégralité du texte, paragraphe par paragraphe.
 - Gardez la mise en page, les sémantiques et la ponctuation d'origine.
 
-#### Étape B : Alignement et Relecture anti-hallucination
-- Comparez rigoureusement le texte original et le premier jet pour vous assurer qu'un paragraphe n'a pas été sauté, altéré ou inventé.
-- Corrigez le draft en assurant la parfaite justesse linguistique et sémantique.
+#### Étape B : Alignement, Contrôle d'Intégrité & Anti-Troncature OBLIGATOIRE
+- **Contrôle du Ratio de Longueur (Strict >= 85%)** :
+  - Calculez la longueur en caractères du texte original (`len(originalText)`) et du texte traduit (`len(translatedText)`).
+  - La version traduite en français doit obligatoirement représenter **au moins 85% du volume de caractères d'origine**. Si le ratio est inférieur à 0,85 (ex: 50% ou 30%), **LE CHAPITRE EST TRONQUÉ ET CONSIDÉRÉ COMME ÉCHOUÉ**.
+- **Contrôle de la Fin de Chapitre** :
+  - Comparez la toute dernière phrase du texte original et la dernière phrase de la traduction. Assurez-vous que la scène finale du chapitre n'a pas été omise ou coupée en cours de route.
+- **Contrôle de la Langue (Anti-Anglais Brut)** :
+  - Vérifiez que le texte traduit est à 100% en français et qu'aucun paragraphe ou bloc n'est resté en anglais brut.
+- **Interdiction des Fausses Notes de Validation** :
+  - Ne rédigez JAMAIS de note du type "Aucun paragraphe omis" si le ratio de longueur est inférieur à 85%.
+  - Si une troncature est détectée, vous devez immédiatement compléter et traduire la seconde moitié du chapitre manquante avant de passer à l'Étape C.
 
-#### Étape C : Polissage Littéraire
+#### Étape C : Polissage Littéraire & Validation Finale
 - Retravaillez le style stylistique de la traduction en s'assurant que le français est fluide, élégant et digne d'une publication littéraire officielle de roman fantastique (Xianxia/Wuxia/SciFi/Victorien).
 - Assurez-vous d'incorporer les expressions de dialogue naturelles en français.
+- Vérifiez une dernière fois que le texte poli final respecte toujours la règle d'intégrité de volume (>= 85%).
 
 ### 4. Écriture et Sauvegarde de la Traduction et de l'Enrichment
 - Mettez à jour chaque chapitre traduit dans l'arbre JSON de `/data/projects.json` :
-  - `status`: `"done"`
+  - `status`: `"done"` (uniquement si les vérifications de l'Étape B sont toutes validées avec succès)
   - `title`: "Le titre traduit à l'Étape -1"
   - `draftText`: "Le texte de l'étape A..."
-  - `validationNotes`: "Rapport court d'alignement..."
+  - `validationNotes`: "Rapport précis d'alignement avec métriques (ex: Ratio VO/VF: 110%, 65 paragraphes vérifiés)..."
   - `translatedText`: "Le texte poli de l'étape C..."
 - Mettez à jour également le tableau `glossary` du projet avec les nouveaux termes de lore déduits à l'Étape Préliminaire 0.
 - Utilisez `create_file` avec `Overwrite: true` pour réécrire les fichiers `/data/projects.json` et `/public/data/projects.json` avec le JSON formaté mis à jour afin d'assurer la synchronisation et l'affichage dans l'application.
 - **CRITICAL**: Veillez à ne détruire aucun autre projet ou chapitre existant dans le fichier JSON lors de la réécriture ! Préservez l'intégralité du fichier.
 
 ### 5. Notification utilisateur
-- Confirmez à l'utilisateur en français que la traduction conjointe du/des chapitre(s) (en mentionnant leurs nouveaux titres polis en français !) a été effectuée avec succès et enregistrée de façon permanente sur le disque.
+- Confirmez à l'utilisateur en français que la traduction conjointe du/des chapitre(s) (en mentionnant leurs nouveaux titres polis en français ainsi que le taux de complétude 100%) a été effectuée avec succès et enregistrée de façon permanente sur le disque.
 - Invitez-le à **rafraîchir** ou **cliquer sur le chapitre** dans l'application web pour voir immédiatement le résultat s'afficher côte à côte !
 
 ---
