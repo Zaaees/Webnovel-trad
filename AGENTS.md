@@ -85,8 +85,14 @@ Exécutez ce pipeline pour chaque chapitre de manière extrêmement méticuleuse
 - Utilisez `create_file` avec `Overwrite: true` pour réécrire les fichiers `/data/projects.json` et `/public/data/projects.json` avec le JSON formaté mis à jour afin d'assurer la synchronisation et l'affichage dans l'application.
 - **CRITICAL**: Veillez à ne détruire aucun autre projet ou chapitre existant dans le fichier JSON lors de la réécriture ! Préservez l'intégralité du fichier.
 
+### 4.1 Synchronisation et Push Automatique sur GitHub OBLIGATOIRE
+- Dès que la sauvegarde locale des fichiers JSON est terminée avec succès :
+  - Exécutez `git add data/projects.json public/data/projects.json`
+  - Effectuez un commit Git avec un message descriptif (ex: `feat: translate chapters <ids> and update lore glossary`)
+  - Exécutez `git push origin main` pour publier immédiatement et automatiquement les modifications sur le dépôt distant GitHub.
+
 ### 5. Notification utilisateur
-- Confirmez à l'utilisateur en français que la traduction conjointe du/des chapitre(s) (en mentionnant leurs nouveaux titres polis en français ainsi que le taux de complétude 100%) a été effectuée avec succès et enregistrée de façon permanente sur le disque.
+- Confirmez à l'utilisateur en français que la traduction conjointe du/des chapitre(s) (en mentionnant leurs nouveaux titres polis en français ainsi que le taux de complétude 100%) a été effectuée avec succès, enregistrée sur le disque, et automatiquement poussée sur le dépôt GitHub.
 - Invitez-le à **rafraîchir** ou **cliquer sur le chapitre** dans l'application web pour voir immédiatement le résultat s'afficher côte à côte !
 
 ---
